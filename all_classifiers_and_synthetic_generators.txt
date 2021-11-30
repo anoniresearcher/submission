@@ -1,0 +1,103 @@
+
+These commands must be composed with the classifiers as shown below: 
+
+EvaluateInterleavedTestThenTrainSSLDelayed + <classifier> + <generator>
+
+## CLASSIFIERS ##
+
+#SLEADE 10 learners
+-r 1 -l (semisupervised.Lead -l (StreamingRandomPatches -s 10 -u -q) -b ArgMax -t MajorityTrainsMinority -p MultiViewMinKappaConfidence -m 0.0 -n 100.0 -s)
+
+#SLEADE 30 learners
+-r 1 -l (semisupervised.Lead -l (StreamingRandomPatches -s 30 -u -q) -b ArgMax -t MajorityTrainsMinority -p MultiViewMinKappaConfidence -m 0.0 -n 100.0 -s)
+
+
+#SelfTraining 10 learners
+-r 1 -l (semisupervised.SelfTrainingClassifier -l (meta.StreamingRandomPatches -s 10) -s DistanceMeasure)
+
+#SelfTraining 30 learners
+-r 1 -l (semisupervised.SelfTrainingClassifier -l (meta.StreamingRandomPatches -s 30) -s DistanceMeasure)
+
+#ARF 10 learners
+-r 1 -a -b (meta.AdaptiveRandomForest -o (Percentage (M * (m / 100))) -m 60 -s 10)
+
+#ARF 30 learners
+-r 1 -a -b (meta.AdaptiveRandomForest -o (Percentage (M * (m / 100))) -m 60 -s 30)
+
+#SRP 10 learners
+-r 1 -a -b (meta.StreamingRandomPatches -s 10)
+
+#SRP 30 learners
+-r 1 -a -b (meta.StreamingRandomPatches -s 30)
+
+#SRP 10 learners unsupervised drift detection
+-r 1 -l (semisupervised.Lead -l (StreamingRandomPatches -s 10 -u -q) -t MajorityTrainsMinority -p MultiViewMinKappaConfidence -m 1.0 -n 100.0 -s)
+
+#SRP 30 learners unsupervised drift detection
+-r 1 -l (semisupervised.Lead -l (StreamingRandomPatches -s 30 -u -q) -t MajorityTrainsMinority -p MultiViewMinKappaConfidence -m 1.0 -n 100.0 -s)
+
+
+
+## Generators ##
+
+## Warm-up and online configuration ##
+
+#LED_a
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#LED_g
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000) 
+
+#AGR_a
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator )   -d (generators.AgrawalGenerator -f 4) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#AGR_g
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator ) -d (generators.AgrawalGenerator -f 4) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000) 
+
+#RBF_m
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .0001)
+
+#RBF_f
+-w -k 1 -p 1000 -j 0.99  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .001) 
+
+
+## Warm-up only configuration ##
+
+#LED_a
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#LED_g
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000) 
+
+#AGR_a
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator )   -d (generators.AgrawalGenerator -f 4) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#AGR_g
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator ) -d (generators.AgrawalGenerator -f 4) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000)
+
+#RBF_m
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .0001) 
+
+#RBF_f
+-w -k 1 -p 1000 -j 1.0  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .001) 
+
+
+## Online only configuration ##
+
+#LED_a
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#LED_g
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 1)   -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 3) -d (ConceptDriftStream -s (generators.LEDGeneratorDrift -d 5)  -d (generators.LEDGeneratorDrift -d 7) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000) 
+
+#AGR_a
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator )   -d (generators.AgrawalGenerator -f 4) -w 50 -p 25000 ) -w 50 -p 25000 ) -w 50 -p 25000) 
+
+#AGR_g
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (ConceptDriftStream -s (generators.AgrawalGenerator -f 1) -d (ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s (generators.AgrawalGenerator ) -d (generators.AgrawalGenerator -f 4) -w 5000 -p 25000 ) -w 5000 -p 25000 ) -w 5000 -p 25000) 
+
+#RBF_m
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .0001)
+
+#RBF_f 
+-w -k 1 -p -1 -j 0.98  -i 100000 -f 100000 -s (generators.RandomRBFGeneratorDrift -c 5 -s .001) 
